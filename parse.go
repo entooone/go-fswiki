@@ -410,7 +410,7 @@ func (p *parser) parsePlugin(nodes []Node, str string) []Node {
 	}
 
 	if len(s) > 1 {
-		node.Content = s[1]
+		node.Content = strings.TrimSpace(s[1])
 	} else if p.curState.isPlugin {
 		node.Content = "\n"
 	}
