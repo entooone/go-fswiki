@@ -100,6 +100,8 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 		case NodePlugin:
 			if n.Content == "" {
 				fmt.Fprintf(buf, "{{%s}}", n.Tag)
+			} else if strings.HasPrefix(n.Content, "\n") {
+				fmt.Fprintf(buf, "{{%s%s}}", n.Tag, n.Content)
 			} else {
 				fmt.Fprintf(buf, "{{%s %s}}", n.Tag, n.Content)
 			}
