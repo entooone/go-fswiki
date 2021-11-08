@@ -29,12 +29,12 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 		isTable         bool
 	)
 
-	for _, n := range nodes {
+	for i, n := range nodes {
 		switch n.Kind {
 		case NodeHeadingOpen:
 			fmt.Fprintf(buf, "%s ", strings.Repeat("!", 5-n.Level))
 		case NodeHeadingClose:
-			fmt.Fprintf(buf, "\n\n")
+			fmt.Fprintf(buf, "\n")
 		case NodeUnorderedListOpen:
 			listHeader = "*"
 			listDepth++
@@ -43,23 +43,18 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 			listDepth++
 		case NodeUnorderedListClose, NodeOrderedListClose:
 			listDepth--
-			if listDepth == 0 {
-				fmt.Fprintf(buf, "\n")
-			}
 		case NodeListItemOpen:
 			fmt.Fprintf(buf, "%s ", strings.Repeat(listHeader, listDepth))
 		case NodeListItemClose:
 			fmt.Fprintf(buf, "\n")
 		case NodeParagraphOpen:
-			fmt.Fprintf(buf, "")
 		case NodeParagraphClose:
-			fmt.Fprintf(buf, "\n\n")
+			fmt.Fprintf(buf, "\n")
 		case NodePreformatted:
 			bs := bufio.NewScanner(strings.NewReader(n.Content))
 			for bs.Scan() {
 				fmt.Fprintf(buf, " %s\n", bs.Text())
 			}
-			fmt.Fprintf(buf, "\n")
 		case NodeTableOpen:
 			table = make([][]string, 0)
 			colwidth = make([]int, 1)
@@ -74,7 +69,6 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 				fmt.Fprintf(buf, "\n")
 				fmt.Fprintf(buf, commentsInTable[i])
 			}
-			fmt.Fprintf(buf, "\n")
 			isTable = false
 		case NodeTableRowOpen:
 			tj = 0
@@ -105,7 +99,7 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 			} else {
 				fmt.Fprintf(buf, "{{%s %s}}", n.Tag, n.Content)
 			}
-			fmt.Fprintf(buf, "\n\n")
+			fmt.Fprintf(buf, "\n")
 		case NodeInline:
 			tbuf := &bytes.Buffer{}
 			for _, c := range n.Children {
@@ -128,6 +122,17 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 				}
 			} else {
 				tbuf.WriteTo(buf)
+			}
+		}
+
+		if i < len(nodes)-1 {
+			switch n.Kind {
+			case NodeHeadingClose, NodeParagraphClose, NodePreformatted, NodePlugin, NodeTableClose:
+				fmt.Fprintf(buf, "\n")
+			case NodeOrderedListClose, NodeUnorderedListClose:
+				if listDepth == 0 {
+					fmt.Fprintf(buf, "\n")
+				}
 			}
 		}
 	}
