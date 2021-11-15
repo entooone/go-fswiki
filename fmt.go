@@ -116,6 +116,9 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 			}
 			if isTable {
 				table[ti][tj] = tbuf.String()
+				if strings.Index(table[ti][tj], ",") != -1 {
+					table[ti][tj] = fmt.Sprintf("\"%s\"", table[ti][tj])
+				}
 				w := runewidth.StringWidth(table[ti][tj])
 				if colwidth[tj] < w {
 					colwidth[tj] = w
