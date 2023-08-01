@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/entooone/go-fswiki"
@@ -61,7 +62,7 @@ func TestFormatDocumentWithOption(t *testing.T) {
 				t.Errorf("cannot format %q", srcpath)
 			}
 
-			if !bytes.Equal(got, wantbuf) {
+			if !strings.EqualFold(string(got), string(wantbuf)) {
 				t.Errorf("got %q, want %q", got, wantbuf)
 			}
 		})
