@@ -10,7 +10,21 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-func FormatDocument(r io.Reader) ([]byte, error) {
+type TableAlignType int
+
+const (
+	TableAlignLeft TableAlignType = iota
+	TableAlignRight
+)
+
+type FormatOption struct {
+	// TableAlign はテーブルの整形における文字列の配置を指定します。
+	TableAlign TableAlignType
+	// TableInsertSpaceToEndOfCell はテーブルの整形におけるセルの末尾にスペースを挿入するかどうかを指定します。
+	TableInsertSpaceToEndOfCell bool
+}
+
+func FormatDocumentWithOption(r io.Reader, option FormatOption) ([]byte, error) {
 	nodes, err := Parse(r)
 	if err != nil {
 		return nil, err
@@ -64,7 +78,22 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 		case NodeTableClose:
 			for i, row := range table {
 				for j, s := range row {
-					fmt.Fprintf(buf, ",%s", runewidth.FillLeft(s, colwidth[j]))
+					cell := s
+
+					switch option.TableAlign {
+					case TableAlignLeft:
+						cell = runewidth.FillRight(cell, colwidth[j])
+					case TableAlignRight:
+						cell = runewidth.FillLeft(cell, colwidth[j])
+					}
+
+					if option.TableInsertSpaceToEndOfCell && j < len(row)-1 {
+						cell = fmt.Sprintf(",%s ", cell)
+					} else {
+						cell = fmt.Sprintf(",%s", cell)
+					}
+
+					fmt.Fprintf(buf, cell)
 				}
 				fmt.Fprintf(buf, "\n")
 				fmt.Fprintf(buf, commentsInTable[i])
@@ -141,4 +170,11 @@ func FormatDocument(r io.Reader) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func FormatDocument(r io.Reader) ([]byte, error) {
+	return FormatDocumentWithOption(r, FormatOption{
+		TableAlign:                  TableAlignRight,
+		TableInsertSpaceToEndOfCell: false,
+	})
 }
