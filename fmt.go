@@ -82,7 +82,9 @@ func FormatDocumentWithOption(r io.Reader, option FormatOption) ([]byte, error) 
 
 					switch option.TableAlign {
 					case TableAlignLeft:
-						cell = runewidth.FillRight(cell, colwidth[j])
+						if j < len(row)-1 {
+							cell = runewidth.FillRight(cell, colwidth[j])
+						}
 					case TableAlignRight:
 						cell = runewidth.FillLeft(cell, colwidth[j])
 					}
